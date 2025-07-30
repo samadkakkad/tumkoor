@@ -36,6 +36,7 @@
   .profit-list {
     margin-top: 20px;
     font-size: 16px;
+    white-space: pre-line;
   }
   .profit-list div {
     margin: 5px 0;
@@ -102,7 +103,7 @@
 </div>
 
 <div class="profit-list" id="profitList">
-  <!-- Partner profits will appear here -->
+  <!-- Profit details will appear here -->
 </div>
 
 <button id="copyBtn">Copy to WhatsApp</button>
@@ -121,20 +122,40 @@
     {name: 'Shameel', ratio: 3}
   ];
 
+  function formatNumber(num) {
+    return num.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+  }
+
   function updateProfits() {
-    const actualProfit = parseFloat(totalProfitInput.value);
-    if (isNaN(actualProfit) || actualProfit < 0) {
+    const totalProfit = parseFloat(totalProfitInput.value);
+    if (isNaN(totalProfit) || totalProfit < 0) {
       profitList.innerHTML = '';
       return;
     }
-    const netProfit = (actualProfit * 0.8) * 0.78;
+
+    // Step 1: Profit for Shareholders (80%)
+    const profitForShareholders = totalProfit * 0.80;
+
+    // Step 2: Profit for 1%
+    const profitForOnePercent = profitForShareholders * 0.01;
+
+    // Step 3: Profit for 78%
+    const profitForSeventyEightPercent = profitForOnePercent * 0.78;
+
     const totalRatio = partners.reduce((sum, p) => sum + p.ratio, 0);
 
-    let html = `<strong>Profit Sharing for ${monthSelect.value} ${yearSelect.value}:</strong><br>`;
+    let html = `<div><strong>Profit Sharing for ${monthSelect.value} ${yearSelect.value}:</strong></div>`;
+    html += `<div>Total Profit : ₹${formatNumber(totalProfit)}</div>`;
+    html += `<div>Profit for Shareholders (80%) : ₹${formatNumber(profitForShareholders)}</div>`;
+    html += `<div>Profit for 1% : ₹${formatNumber(profitForOnePercent)}</div>`;
+    html += `<div>Profit for 78% : ₹${formatNumber(profitForSeventyEightPercent)}</div>`;
+    html += `<br><div><strong>Shareholders Profit Distribution:</strong></div>`;
+
     partners.forEach(p => {
-      const share = (netProfit * p.ratio / totalRatio).toFixed(2);
-      html += `<div>${p.name}: ₹${share}</div>`;
+      const share = profitForSeventyEightPercent * p.ratio / totalRatio;
+      html += `<div>${p.name}: ₹${formatNumber(share)}</div>`;
     });
+
     profitList.innerHTML = html;
   }
 
@@ -143,18 +164,27 @@
   monthSelect.addEventListener('change', updateProfits);
 
   copyBtn.addEventListener('click', () => {
-    const actualProfit = parseFloat(totalProfitInput.value);
-    if (isNaN(actualProfit) || actualProfit < 0) {
+    const totalProfit = parseFloat(totalProfitInput.value);
+    if (isNaN(totalProfit) || totalProfit < 0) {
       alert('Please enter a valid Total Profit value.');
       return;
     }
-    const netProfit = (actualProfit * 0.8) * 0.78;
+
+    const profitForShareholders = totalProfit * 0.80;
+    const profitForOnePercent = profitForShareholders * 0.01;
+    const profitForSeventyEightPercent = profitForOnePercent * 0.78;
     const totalRatio = partners.reduce((sum, p) => sum + p.ratio, 0);
 
-    let text = `TUMKOOR Profit Sharing\nMonth: ${monthSelect.value} ${yearSelect.value}\nTotal Profit: ₹${actualProfit.toFixed(2)}\nNet Profit (80% * 78%): ₹${netProfit.toFixed(2)}\n\nProfit Distribution:\n`;
+    let text = `TUMKOOR Profit Sharing\nMonth: ${monthSelect.value} ${yearSelect.value}\n\n`;
+    text += `Total Profit : ₹${formatNumber(totalProfit)}\n`;
+    text += `Profit for Shareholders (80%) : ₹${formatNumber(profitForShareholders)}\n`;
+    text += `Profit for 1% : ₹${formatNumber(profitForOnePercent)}\n`;
+    text += `Profit for 78% : ₹${formatNumber(profitForSeventyEightPercent)}\n\n`;
+    text += `Shareholders Profit Distribution:\n`;
+
     partners.forEach(p => {
-      const share = (netProfit * p.ratio / totalRatio).toFixed(2);
-      text += `${p.name}: ₹${share}\n`;
+      const share = profitForSeventyEightPercent * p.ratio / totalRatio;
+      text += `${p.name}: ₹${formatNumber(share)}\n`;
     });
 
     navigator.clipboard.writeText(text).then(() => {
